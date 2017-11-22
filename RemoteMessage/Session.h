@@ -19,6 +19,9 @@
 #pragma warning(disable:4800) // forcing value to bool 'true' or 'false' (performance warning)
 #include <google/protobuf/message_lite.h>
 
+namespace RMsg
+{
+
 template<typename T, typename TPbMsg>
 using TMessageHandler = void(T::*)(const Message&, const std::shared_ptr<TPbMsg>&);
 
@@ -59,7 +62,7 @@ public:
 	void EnqueueNotice(Message* pMsg);
 	void EnqueueRequest(Message* pMsg, const MessageHander& callback);
 	template<typename TPbMsg>
-	Message* ConvertPbMessage(const TPbMsg& pbMsg)
+	Message* ConvertPbRequest(const TPbMsg& pbMsg)
 	{
 		const auto& defTypeInfo = TPbMsg::TypeInfo::default_instance();
 		Message* pMsg = NewRequestMessage(defTypeInfo.category(), defTypeInfo.method());
@@ -68,7 +71,7 @@ public:
 		return pMsg;
 	}
 	template<typename TPbMsg>
-	Message* ConvertPbMessage(const TPbMsg& pbMsg, const Message& request)
+	Message* ConvertPbReply(const TPbMsg& pbMsg, const Message& request)
 	{
 		Message* pMsg = NewReplyMessage(&request);
 		pMsg->m_Payload.resize(pbMsg.ByteSizeLong());
@@ -78,19 +81,19 @@ public:
 	template<typename TPbMsg>
 	void EnqueuePbNotice(const TPbMsg& pbMsg)
 	{
-		Message* pMsg = ConvertPbMessage(pbMsg);
+		Message* pMsg = ConvertPbRequest(pbMsg);
 		EnqueueNotice(pMsg);
 	}
 	template<typename TPbMsg>
-	void EnqueuePbNotice(const TPbMsg& pbMsg, const Message& request)
+	void EnqueuePbReply(const TPbMsg& pbMsg, const Message& request)
 	{
-		Message* pMsg = ConvertPbMessage(pbMsg, request);
+		Message* pMsg = ConvertPbReply(pbMsg, request);
 		EnqueueNotice(pMsg);
 	}
 	template<typename T, typename TPbMsgRequest, typename TPbMsgReply>
 	void EnqueuePbRequest(const TPbMsgRequest& pbMsg, TMessageHandler<T, TPbMsgReply> pMemFunc, T* pThis)
 	{
-		Message* pMsg = ConvertPbMessage(pbMsg);
+		Message* pMsg = ConvertPbRequest(pbMsg);
 		auto handler = CreateMessageHandler(pMemFunc, pThis);
 		EnqueueRequest(pMsg, handler);
 	}
@@ -154,3 +157,4 @@ private:
 	void HandleDisconnect(const boost::system::error_code &ec);
 };
 
+}

@@ -18,6 +18,9 @@
 		return ret;								\
 	}
 
+namespace RMsg
+{
+
 Server::Server()
 	: m_acceptor(m_ioservice)
 {
@@ -57,4 +60,6 @@ bool Server::Listen(int port, Session& s)
 void Server::StopListen()
 {
 	m_ioservice.stop();
+}
+
 }

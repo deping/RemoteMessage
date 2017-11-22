@@ -10,8 +10,9 @@
 #include <iostream>
 #include "Session.h"
 #include "PbSample.pb.h"
-#include "ProtobufMessageHandler.h"
 #include "utility.h"
+
+using namespace RMsg;
 
 class Manager
 {

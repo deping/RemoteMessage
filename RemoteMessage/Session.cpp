@@ -13,6 +13,12 @@
 #include "Session.h"
 #include "utility.h"
 
+namespace RMsg
+{
+
+void AppendList(Message*& pList1, Message* pList2);
+Message* ReverseList(Message* pMsg);
+
 std::atomic<uint32_t> Session::m_CurSessionId = 0;
 
 Session::Session()
@@ -418,4 +424,6 @@ void Session::ProcessMessageAndAsyncReadNext()
 	{
 		AsyncReadHeaderHandler(ec, bytes_transferred);
 	});
+}
+
 }

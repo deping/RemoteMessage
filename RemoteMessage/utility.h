@@ -12,6 +12,9 @@
 #include <string>
 #include "ImpExpMacro.h"
 
+namespace RMsg
+{
+
 void RMSG_API SetDebugInfo(const char* fileName);
 void RMSG_API EnableDebugInfo(bool value);
 
@@ -44,3 +47,5 @@ private:
 #define TRACE_FUNCTION(arguments, ...)										\
 PrintDebugInfo(__FILE__, __LINE__, __FUNCTION__, arguments, __VA_ARGS__);	\
 TraceFunction func##__LINE__(__FILE__, __FUNCTION__);
+
+}

@@ -14,6 +14,9 @@
 #include <vector>
 #include "ImpExpMacro.h"
 
+namespace RMsg
+{
+
 using MsgCategory = uint16_t;
 using MsgClass = uint16_t;
 using MsgResult = uint32_t;
@@ -50,4 +53,3 @@ public:
 };
 
 void AppendList(Message*& pList1, Message* pList2);
-Message* ReverseList(Message* pMsg);

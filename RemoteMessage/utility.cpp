@@ -17,6 +17,9 @@
 #include <mutex>
 #include <thread>
 
+namespace RMsg
+{
+
 std::unique_ptr<std::ofstream> g_DebugInfo;
 std::string g_DebugInfoFile;
 bool g_EnableDebugInfo = true;
@@ -114,4 +117,6 @@ TraceFunction::TraceFunction(const char* fileName, const char* funcName)
 TraceFunction::~TraceFunction()
 {
 	PrintDebugInfo(m_FileName, 0, m_FuncName, "Exit");
+}
+
 }

@@ -10,6 +10,9 @@
 #include "Message.h"
 #include "utility.h"
 
+namespace RMsg
+{
+
 Message::Message()
 	: m_SessionId(0)
 	, m_MsgIdEx(KEEP_ALIVE_MSG)
@@ -106,3 +109,4 @@ Message* ReverseList(Message* pMsg)
 	return prev;
 }
 
+}

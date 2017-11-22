@@ -10,6 +10,9 @@
 #pragma once
 #include "Session.h"
 
+namespace RMsg
+{
+
 class RMSG_API Server
 {
 public:
@@ -27,3 +30,4 @@ private:
 	void Run();
 };
 
+}

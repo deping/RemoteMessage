@@ -11,9 +11,9 @@
 #include "Session.h"
 #include "Server.h"
 #include "PbSample.pb.h"
-#include "ProtobufMessageHandler.h"
 #include "utility.h"
 
+using namespace RMsg;
 class Worker
 {
 	Session* m_pSession;
