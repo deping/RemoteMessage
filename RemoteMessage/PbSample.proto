@@ -1,0 +1,43 @@
+syntax = "proto2";
+
+option optimize_for = LITE_RUNTIME;
+
+message PbAddRequest
+{
+    message TypeInfo
+    {
+        optional int32 Category = 1 [default = 0];
+        optional int32 Method = 2   [default = 0];
+    }
+    required int32 num1 = 1;
+    required int32 num2 = 2;
+}
+
+message PbAddReply
+{
+    required int32 sum = 1;
+}
+
+message PbGreet
+{
+    message TypeInfo
+    {
+        optional int32 Category = 1 [default = 1];
+        optional int32 Method = 2   [default = 0];
+    }
+    required string text = 1;
+}
+
+message PbGreetReply
+{
+    required string text = 1;
+}
+
+message PbFinish
+{
+    message TypeInfo
+    {
+        optional int32 Category = 1 [default = 2];
+        optional int32 Method = 2   [default = 0];
+    }
+}
