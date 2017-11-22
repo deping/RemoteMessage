@@ -22,7 +22,6 @@ list(APPEND SRC
     Server.cpp
     utility.h
     utility.cpp
-    PbSample.proto
     )
 
 add_definitions(-DRMSG_LIB -D_WIN32_WINNT=0x0501)
@@ -45,6 +44,14 @@ add_custom_command(TARGET RemoteMessage POST_BUILD
 add_custom_command(TARGET RemoteMessage POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:RemoteMessage> $<$<CONFIG:Debug>:$<TARGET_PDB_FILE:RemoteMessage>> ${RMsgTestClient_TARGET_FILE_DIR}/$<CONFIG>)
 
-add_custom_command(TARGET RemoteMessage POST_BUILD
-    COMMAND ${PROTOBUF_DIR}/bin/protoc.exe -I=${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/PbSample.proto
-    DEPENDS PbSample.proto)
+set(PROTO_OUTPUT ${CMAKE_CURRENT_SOURCE_DIR}/PbSample.pb.h ${CMAKE_CURRENT_SOURCE_DIR}/PbSample.pb.cc)
+add_custom_command(
+    OUTPUT ${PROTO_OUTPUT}
+    COMMAND "${PROTOBUF_DIR}/bin/protoc.exe" -I=${CMAKE_CURRENT_SOURCE_DIR} --cpp_out=${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/PbSample.proto
+    DEPENDS PbSample.proto
+    VERBATIM
+    )
+add_custom_target(CompileProto
+    DEPENDS ${PROTO_OUTPUT}
+    )
+set(PROTO_OUTPUT ${PROTO_OUTPUT} PARENT_SCOPE)
