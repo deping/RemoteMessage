@@ -52,4 +52,4 @@ public:
 	static const size_t s_SizeOfHeader = sizeof(uint32_t)/*m_MsgIdEx*/ + sizeof(MsgCategory)/*m_MsgCat*/ + sizeof(MsgClass)/*m_MsgCls*/ + sizeof(MsgResult)/*m_MsgRst*/ + sizeof(uint32_t)/*payload size*/;
 };
 
-void AppendList(Message*& pList1, Message* pList2);
+}

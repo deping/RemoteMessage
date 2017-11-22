@@ -14,6 +14,7 @@
 #include "utility.h"
 
 using namespace RMsg;
+
 class Worker
 {
 	Session* m_pSession;
@@ -29,7 +30,7 @@ public:
 		std::cout << "PbAddRequest received." << std::endl;
 		PbAddReply reply;
 		reply.set_sum(pPbRequest->num1() + pPbRequest->num2());
-		m_pSession->EnqueuePbNotice(reply, msg);
+		m_pSession->EnqueuePbReply(reply, msg);
 	}
 
 	void Process(const Message& msg, const std::shared_ptr<PbGreet>& pPbRequest)
@@ -37,7 +38,7 @@ public:
 		std::cout << "PbGreet received." << std::endl;
 		PbGreetReply reply;
 		reply.set_text("I am fine!");
-		m_pSession->EnqueuePbNotice(reply, msg);
+		m_pSession->EnqueuePbReply(reply, msg);
 	}
 
 	void ProcessFinish(const Message& msg, const std::shared_ptr<PbFinish>& pPbRequest)
