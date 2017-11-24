@@ -35,5 +35,7 @@ You can call **Session::RegisterDisconnect** to detect if socket is disconnected
 You can disable debug info to improve performance, or enable it to debug communication error.
 
     EnableDebugInfo(bool);
+    
+Machine byte order is not considered yet.
 
 If you have good ideas or find bugs, please contact me(cdp97531@sina.com)
