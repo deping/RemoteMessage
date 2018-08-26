@@ -8,9 +8,13 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 
+#include <codeanalysis\warnings.h>
+#pragma warning( push )
+#pragma warning ( disable : ALL_CODE_ANALYSIS_WARNINGS )
 #include "Session.h"
 #include "Server.h"
 #include "utility.h"
+#pragma warning( pop )
 
 #include "UpdateUI.h"
 
@@ -54,9 +58,9 @@ int main(int argc, char *argv[])
 	UpdateUI* pUui = nullptr; // belong to message thread.
 	std::thread lth;
 	std::thread cth;
-	std::string ipstring;
 
 	QObject::connect(&app, &QApplication::aboutToQuit, [&]() {
+		// Wait message thread or app.exec() will throw exception at exit.
 		s.Stop();
 		if (lth.joinable())
 			lth.join();
@@ -80,13 +84,14 @@ int main(int argc, char *argv[])
 	});
 
 	QObject::connect(pCon, &QPushButton::clicked, [&]() {
-		ipstring = pIP->text().toStdString();
+		std::string ipstring = pIP->text().toStdString();
 		if (ipstring.empty())
 			return;
 		pInfo->append("Connect to IP ...");
 		pListen->setEnabled(false);
 		pCon->setEnabled(false);
-		cth = std::thread([&]() {
+		// Use copy capture for ipstring or it will be used out of its lifespan.
+		cth = std::thread([ipstring, pInfo, port, &pUui, &s]() {
 			pUui = new UpdateUI;
 			QObject::connect(pUui, &UpdateUI::addLine, pInfo, &QTextEdit::append);
 			s.Connect(ipstring.c_str(), port);
