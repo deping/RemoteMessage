@@ -19,6 +19,10 @@ set(PROTOBUF_DIR "" CACHE PATH "protobuf directory")
 include_directories(${PROTOBUF_DIR}/include)
 link_directories(${PROTOBUF_DIR}/lib)
 
+set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE} )
+set( CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${CMAKE_BUILD_TYPE} )
+
 add_subdirectory(RemoteMessage)
 add_subdirectory(RMsgTestClient)
 add_subdirectory(RMsgTestServer)
+add_subdirectory(RMsgTestTalk)

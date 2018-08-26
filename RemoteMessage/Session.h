@@ -52,6 +52,7 @@ public:
 	void Disconnect();
 	// Run is called in the message thread which calls read/writer handlers.
 	void Run();
+	void RunForever();
 	// This can be called in another thread to stop handler processing.
 	void Stop();
 

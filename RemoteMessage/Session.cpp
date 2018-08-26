@@ -204,6 +204,17 @@ void Session::Run()
 	}
 }
 
+void Session::RunForever()
+{
+	// stopped condition: either through an explicit call to stop(), or due to running out of work.
+	// async_read work is linked, so if there is no error, this will run forever.
+	boost::asio::io_service::work work(m_ioservice);
+	while (!m_ioservice.stopped())
+	{
+		m_ioservice.run_one();
+	}
+}
+
 void Session::Stop()
 {
 	m_ioservice.stop();
