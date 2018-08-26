@@ -51,40 +51,56 @@ int main(int argc, char *argv[])
 	EnableDebugInfo(true);
 	Session s;
 	Server ser;
-	UpdateUI uui;
+	UpdateUI* pUui = nullptr; // belong to message thread.
 	std::thread lth;
 	std::thread cth;
+	std::string ipstring;
 
-	QObject::connect(&uui, &UpdateUI::addLine, pInfo, &QTextEdit::append);
+	QObject::connect(&app, &QApplication::aboutToQuit, [&]() {
+		s.Stop();
+		if (lth.joinable())
+			lth.join();
+		if (cth.joinable())
+			cth.join();
+	});
+
 	QObject::connect(pListen, &QPushButton::clicked, [&]() {
 		pInfo->append("Listen ...");
 		lth = std::thread([&]() {
 			ser.Listen(port, s);
-			uui.addLine("Connected.");
+			pUui = new UpdateUI;
+			QObject::connect(pUui, &UpdateUI::addLine, pInfo, &QTextEdit::append);
+			pUui->addLine("Connected.");
 			s.RunForever();
+			delete pUui;
+			pUui = nullptr;
 		});
 		pListen->setEnabled(false);
 		pCon->setEnabled(false);
 	});
 
 	QObject::connect(pCon, &QPushButton::clicked, [&]() {
-		std::string server = pIP->text().toStdString();
-		if (server.empty())
+		ipstring = pIP->text().toStdString();
+		if (ipstring.empty())
 			return;
 		pInfo->append("Connect to IP ...");
-		cth = std::thread([&]() {
-			s.Connect(server.c_str(), port);
-			uui.addLine("Connected.");
-			s.RunForever();
-		});
 		pListen->setEnabled(false);
 		pCon->setEnabled(false);
+		cth = std::thread([&]() {
+			pUui = new UpdateUI;
+			QObject::connect(pUui, &UpdateUI::addLine, pInfo, &QTextEdit::append);
+			s.Connect(ipstring.c_str(), port);
+			pUui->addLine("Connected.");
+			s.RunForever();
+			delete pUui;
+			pUui = nullptr;
+		});
 	});
 
 	s.RegisterMessageHandler(MsgCategory(0), MsgClass(0), [&](std::unique_ptr<const Message> pMsg) {
 		std::string payload(pMsg->m_Payload.begin(), pMsg->m_Payload.end());
 		QString msg = QString::fromStdString(payload);
-		uui.addLine(msg);
+		pUui->addLine(msg);
 	});
 
 	QObject::connect(pSend, &QPushButton::clicked, [&]() {
@@ -96,9 +112,9 @@ int main(int argc, char *argv[])
 	});
 
 	s.RegisterDisconnect([&]() {
-		uui.addLine("Disconnected.\n");
-		pListen->setEnabled(true);
-		pCon->setEnabled(true);
+		pUui->addLine("Disconnected.\n");
+		//pListen->setEnabled(true);
+		//pCon->setEnabled(true);
 	});
 
 	mn.show();
