@@ -26,8 +26,6 @@ public:
 private:
 	boost::asio::io_service m_ioservice;
 	boost::asio::ip::tcp::acceptor m_acceptor;
-
-	void Run();
 };
 
 }

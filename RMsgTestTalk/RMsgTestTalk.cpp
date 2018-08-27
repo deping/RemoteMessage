@@ -58,6 +58,7 @@ int main(int argc, char *argv[])
 	UpdateUI* pUui = nullptr; // belong to message thread.
 	std::thread lth;
 	std::thread cth;
+	bool connected = false;
 
 	QObject::connect(&app, &QApplication::aboutToQuit, [&]() {
 		// Wait message thread or app.exec() will throw exception at exit.
@@ -68,14 +69,36 @@ int main(int argc, char *argv[])
 			cth.join();
 	});
 
+	s.RegisterConnect([&]() {
+		connected = true;
+		pUui->addLine("Connected.");
+		pUui->enableButtons(false);
+	});
+
+	s.RegisterDisconnect([&]() {
+		connected = false;
+		pUui->addLine("Disconnected.");
+		pUui->enableButtons(true);
+	});
+
 	QObject::connect(pListen, &QPushButton::clicked, [&]() {
 		pInfo->append("Listen ...");
+		//s.Stop();
+		//if (lth.joinable())
+		//	lth.join();
+		//if (cth.joinable())
+		//	cth.join();
 		lth = std::thread([&]() {
-			ser.Listen(port, s);
 			pUui = new UpdateUI;
 			QObject::connect(pUui, &UpdateUI::addLine, pInfo, &QTextEdit::append);
-			pUui->addLine("Connected.");
-			s.RunForever();
+			QObject::connect(pUui, &UpdateUI::enableButtons, pInfo, [=](bool val) {
+				pListen->setEnabled(val);
+				pCon->setEnabled(val);
+			});
+			ser.Listen(port, s);
+			if (connected)
+				s.RunForever();
+			pUui->enableButtons(true);
 			delete pUui;
 			pUui = nullptr;
 		});
@@ -90,13 +113,23 @@ int main(int argc, char *argv[])
 		pInfo->append("Connect to IP ...");
 		pListen->setEnabled(false);
 		pCon->setEnabled(false);
+		//s.Stop();
+		//if (lth.joinable())
+		//	lth.join();
+		//if (cth.joinable())
+		//	cth.join();
 		// Use copy capture for ipstring or it will be used out of its lifespan.
-		cth = std::thread([ipstring, pInfo, port, &pUui, &s]() {
+		cth = std::thread([ipstring, pInfo, pListen, pCon, port, &pUui, &s, &connected]() {
 			pUui = new UpdateUI;
 			QObject::connect(pUui, &UpdateUI::addLine, pInfo, &QTextEdit::append);
+			QObject::connect(pUui, &UpdateUI::enableButtons, pInfo, [=](bool val) {
+				pListen->setEnabled(val);
+				pCon->setEnabled(val);
+			});
 			s.Connect(ipstring.c_str(), port);
-			pUui->addLine("Connected.");
-			s.RunForever();
+			if (connected)
+				s.RunForever();
+			pUui->enableButtons(true);
 			delete pUui;
 			pUui = nullptr;
 		});
@@ -114,12 +147,6 @@ int main(int argc, char *argv[])
 		std::vector<char> data(str.begin(), str.end());
 		pMsg->m_Payload.swap(data);
 		s.EnqueueNotice(pMsg);
-	});
-
-	s.RegisterDisconnect([&]() {
-		pUui->addLine("Disconnected.\n");
-		//pListen->setEnabled(true);
-		//pCon->setEnabled(true);
 	});
 
 	mn.show();

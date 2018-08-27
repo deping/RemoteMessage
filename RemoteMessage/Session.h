@@ -30,6 +30,7 @@ class RMSG_API Session
 public:
 	using MessageHander = std::function<void(std::unique_ptr<const Message>)>;
 	using OnDisconnect = std::function<void()>;
+	using OnConnect = OnDisconnect;
 
 	template <typename T, typename TPbMsg>
 	static typename Session::MessageHander CreateMessageHandler(TMessageHandler<T, TPbMsg> pMemFunc, T* pThis)
@@ -58,6 +59,8 @@ public:
 
 	uint32_t RegisterDisconnect(OnDisconnect handler);
 	void UnregisterDisconnect(uint32_t connectionId);
+	uint32_t RegisterConnect(OnConnect handler);
+	void UnregisterConnect(uint32_t connectionId);
 
 	uint32_t NextMsgId();
 	void EnqueueNotice(Message* pMsg);
@@ -138,6 +141,8 @@ private:
 	std::mutex m_DisconnectMutex;
 	std::map<uint32_t, OnDisconnect> m_OnDisconnects;
 	uint32_t m_DisconnectId;
+	std::map<uint32_t, OnConnect> m_OnConnects;
+	uint32_t m_ConnectId;
 
 	boost::asio::io_service m_ioservice;
 	boost::asio::ip::tcp::socket m_socket;
@@ -156,6 +161,7 @@ private:
 	void ProcessMessageAndAsyncReadNext();
 	Message* NewMessage();
 	void HandleDisconnect(const boost::system::error_code &ec);
+	void HandleConnect();
 };
 
 }

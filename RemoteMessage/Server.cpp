@@ -31,17 +31,6 @@ Server::~Server()
 {
 }
 
-void Server::Run()
-{
-	// stopped condition: either through an explicit call to stop(), or due to running out of work.
-	// async_read work is linked, so if there is no error, this will run forever.
-	m_ioservice.reset();
-	while (!m_ioservice.stopped())
-	{
-		m_ioservice.run_one();
-	}
-}
-
 bool Server::Listen(int port, Session& s)
 {
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
@@ -53,7 +42,7 @@ bool Server::Listen(int port, Session& s)
 	{
 		s.AsyncAcceptHandler(ec);
 	});
-	Run();
+	m_ioservice.run_one();
 	return true;
 }
 

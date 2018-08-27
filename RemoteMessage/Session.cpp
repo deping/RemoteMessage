@@ -29,6 +29,7 @@ Session::Session()
 	, m_pBeingWritten(nullptr)
 	, m_pBeingRead(nullptr)
 	, m_DisconnectId(0)
+	, m_ConnectId(0)
 	, m_socket(m_ioservice)
 {
 	m_ReadHeader.resize(Message::s_SizeOfHeader);
@@ -82,10 +83,25 @@ void Session::HandleDisconnect(const boost::system::error_code &ec)
 			{
 				onDisconnect.second();
 			}
+			Reset();
 		}
 		break;
 	default:
 		break;
+	}
+}
+
+void Session::HandleConnect()
+{
+	std::map<uint32_t, OnConnect> onConnects;
+	{
+		// Release lock ASAP.
+		std::lock_guard<std::mutex> lock(m_DisconnectMutex);
+		onConnects = m_OnConnects;
+	}
+	for (const auto& onConnect : onConnects)
+	{
+		onConnect.second();
 	}
 }
 
@@ -198,6 +214,7 @@ void Session::Run()
 {
 	// stopped condition: either through an explicit call to stop(), or due to running out of work.
 	// async_read work is linked, so if there is no error, this will run forever.
+	//m_ioservice.reset();
 	while (!m_ioservice.stopped())
 	{
 		m_ioservice.run_one();
@@ -208,6 +225,7 @@ void Session::RunForever()
 {
 	// stopped condition: either through an explicit call to stop(), or due to running out of work.
 	// async_read work is linked, so if there is no error, this will run forever.
+	//m_ioservice.reset();
 	boost::asio::io_service::work work(m_ioservice);
 	while (!m_ioservice.stopped())
 	{
@@ -233,6 +251,21 @@ void Session::UnregisterDisconnect(uint32_t connectionId)
 {
 	std::lock_guard<std::mutex> lock(m_DisconnectMutex);
 	m_OnDisconnects.erase(connectionId);
+}
+
+uint32_t Session::RegisterConnect(OnConnect handler)
+{
+	if (!handler)
+		return 0;
+	std::lock_guard<std::mutex> lock(m_DisconnectMutex);
+	m_OnConnects[++m_ConnectId] = handler;
+	return m_ConnectId;
+}
+
+void Session::UnregisterConnect(uint32_t connectionId)
+{
+	std::lock_guard<std::mutex> lock(m_DisconnectMutex);
+	m_OnConnects.erase(connectionId);
 }
 
 void Session::TryToAsyncWriteMessage()
@@ -278,6 +311,9 @@ void Session::Connect(const char* server, int port)
 	{
 		AsyncConnectHandler(ec);
 	});
+
+	// Wait for connected
+	m_ioservice.run_one();
 }
 
 void Session::AsyncAcceptHandler(const boost::system::error_code &ec)
@@ -292,6 +328,7 @@ void Session::AsyncAcceptHandler(const boost::system::error_code &ec)
 		PRINT_DEBUG_INFO("socket connected.");
 	}
 
+	HandleConnect();
 	boost::asio::async_read(m_socket, boost::asio::buffer(m_ReadHeader), [this](const boost::system::error_code &ec, std::size_t bytes_transferred)
 	{
 		AsyncReadHeaderHandler(ec, bytes_transferred);
