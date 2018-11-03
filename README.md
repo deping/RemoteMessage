@@ -1,5 +1,6 @@
 # RemoteMessage
 RemoteMessage is an **asynchronous** network communication C++ library.
+Note: RemoteMessage **only support IPv4**. You may change code to support IPv6.
 
 You can send raw message(Message class)/protobuf message to the peer.
 If you will, you can use other information exchange format (such as thrift) to replace protobuf.
