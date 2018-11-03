@@ -38,12 +38,22 @@ bool Server::Listen(int port, Session& s)
 	boost::system::error_code ec;
 	CHECK_ERROR(m_acceptor.bind(endpoint, ec), false);
 	CHECK_ERROR(m_acceptor.listen(boost::asio::socket_base::max_connections, ec), false);
-	m_acceptor.async_accept(s.m_socket, [&s](const boost::system::error_code &ec)
+	m_acceptor.async_accept(s.m_socket, [&s, this](const boost::system::error_code &ec)
 	{
+        if (!ec)
+        {
+		    // Only accept one session.
+		    m_acceptor.close();
+            m_ioservice.stop();
+        }
 		s.AsyncAcceptHandler(ec);
 	});
-	m_ioservice.run_one();
-	return true;
+	m_ioservice.reset();
+    while (!m_ioservice.stopped())
+    {
+        m_ioservice.run_one();
+    }
+    return true;
 }
 
 void Server::StopListen()

@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 	pCon->setText("Connect to");
 	pHL->addWidget(pCon);
 	auto* pIP = new QLineEdit;
-	pIP->setText("192.168.1.9");
+	pIP->setText("localhost");
 	pHL->addWidget(pIP);
 
 	auto* pHL2 = new QHBoxLayout;
@@ -83,11 +83,11 @@ int main(int argc, char *argv[])
 
 	QObject::connect(pListen, &QPushButton::clicked, [&]() {
 		pInfo->append("Listen ...");
-		//s.Stop();
-		//if (lth.joinable())
-		//	lth.join();
-		//if (cth.joinable())
-		//	cth.join();
+		s.Stop();
+		if (lth.joinable())
+			lth.join();
+		if (cth.joinable())
+			cth.join();
 		lth = std::thread([&]() {
 			pUui = new UpdateUI;
 			QObject::connect(pUui, &UpdateUI::addLine, pInfo, &QTextEdit::append);
@@ -113,11 +113,11 @@ int main(int argc, char *argv[])
 		pInfo->append("Connect to IP ...");
 		pListen->setEnabled(false);
 		pCon->setEnabled(false);
-		//s.Stop();
-		//if (lth.joinable())
-		//	lth.join();
-		//if (cth.joinable())
-		//	cth.join();
+		s.Stop();
+		if (lth.joinable())
+			lth.join();
+		if (cth.joinable())
+			cth.join();
 		// Use copy capture for ipstring or it will be used out of its lifespan.
 		cth = std::thread([ipstring, pInfo, pListen, pCon, port, &pUui, &s, &connected]() {
 			pUui = new UpdateUI;
@@ -126,7 +126,8 @@ int main(int argc, char *argv[])
 				pListen->setEnabled(val);
 				pCon->setEnabled(val);
 			});
-			s.Connect(ipstring.c_str(), port);
+            char portBuffer[12];
+			s.Connect(ipstring.c_str(), itoa(port, portBuffer, 10));
 			if (connected)
 				s.RunForever();
 			pUui->enableButtons(true);

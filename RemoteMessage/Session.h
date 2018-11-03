@@ -49,7 +49,8 @@ public:
 	Session(const Session&) = delete;
 	~Session();
 
-	void Connect(const char* server, int port);
+	void Connect(const char* ip, int port);
+	void Connect(const char* ipOrServerName, const char* portOrServiceName);
 	void Disconnect();
 	// Run is called in the message thread which calls read/writer handlers.
 	void Run();

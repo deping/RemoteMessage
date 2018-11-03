@@ -8,6 +8,7 @@
 * KIND, either express or implied.
 ***************************************************************************/
 #include <boost/asio/buffer.hpp>
+#include <boost/asio/connect.hpp>
 #include <boost/asio/write.hpp>
 #include <boost/asio/read.hpp>
 #include "Session.h"
@@ -214,7 +215,7 @@ void Session::Run()
 {
 	// stopped condition: either through an explicit call to stop(), or due to running out of work.
 	// async_read work is linked, so if there is no error, this will run forever.
-	//m_ioservice.reset();
+	m_ioservice.reset();
 	while (!m_ioservice.stopped())
 	{
 		m_ioservice.run_one();
@@ -225,7 +226,7 @@ void Session::RunForever()
 {
 	// stopped condition: either through an explicit call to stop(), or due to running out of work.
 	// async_read work is linked, so if there is no error, this will run forever.
-	//m_ioservice.reset();
+	m_ioservice.reset();
 	boost::asio::io_service::work work(m_ioservice);
 	while (!m_ioservice.stopped())
 	{
@@ -304,16 +305,48 @@ void Session::TryToAsyncWriteMessage()
 	}
 }
 
-void Session::Connect(const char* server, int port)
+void Session::Connect(const char* ip, int port)
 {
-	boost::asio::ip::tcp::endpoint tcp(boost::asio::ip::address::from_string(server), port);
+	boost::asio::ip::tcp::endpoint tcp(boost::asio::ip::address::from_string(ip), port);
 	m_socket.async_connect(tcp, [this](const boost::system::error_code &ec)
 	{
 		AsyncConnectHandler(ec);
 	});
 
 	// Wait for connected
+	m_ioservice.reset();
 	m_ioservice.run_one();
+}
+
+void Session::Connect(const char * ipOrServerName, const char * portOrServiceName)
+{
+    // Get a list of endpoints corresponding to the server name.
+    boost::asio::ip::tcp::resolver resolver(m_ioservice);
+    boost::asio::ip::tcp::resolver::query query(ipOrServerName, portOrServiceName);
+    boost::asio::ip::tcp::resolver::iterator begin = resolver.resolve(query);
+    boost::asio::ip::tcp::resolver::iterator end;
+    // Try each endpoint until we successfully establish a connection.
+    bool connected = false;
+    for (auto it = begin; !connected && it != end; ++it)
+    {
+        boost::asio::ip::tcp::endpoint endpoint = it->endpoint();
+        // skip ::1 if ipOrServerName is "localhost"
+        if (endpoint.protocol() != boost::asio::ip::tcp::v4())
+            continue;
+        std::string address = endpoint.address().to_string();
+        PRINT_DEBUG_INFO("Connecting to %s:%d", address.c_str(), (int)endpoint.port());
+        boost::asio::ip::tcp::endpoint tcp(boost::asio::ip::address::from_string(address), endpoint.port());
+        m_socket.async_connect(tcp, [this, &connected](const boost::system::error_code &ec)
+        {
+            if (!ec)
+                connected = true;
+            AsyncConnectHandler(ec);
+        });
+        // Wait for connected
+        m_ioservice.reset();
+        m_ioservice.run_one();
+    }
+
 }
 
 void Session::AsyncAcceptHandler(const boost::system::error_code &ec)
