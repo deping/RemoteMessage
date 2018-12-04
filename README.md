@@ -1,14 +1,19 @@
 # RemoteMessage
-RemoteMessage is an **asynchronous** network communication C++ library.
+RemoteMessage is an **asynchronous** inter-process communication C++ library.
 Note: RemoteMessage **only support IPv4**. You may change code to support IPv6.
 
+# Example
+RMsgTestServer and RMsgTestClient are an console example based on RemoteMessage.
+RMsgTest is an GUI chat example based on RemoteMessage.
+
+# Usage
 You can send raw message(Message class)/protobuf message to the peer.
 If you will, you can use other information exchange format (such as thrift) to replace protobuf.
 To use other information exchange format, you just need to add template methods in Session.h just as protobuf does.
 
 The thread which calls **Session::Run** is called **message thread**.
-Message thread should be worker thread if client has UI thread.
-You can post messages to the peer from any threads. **Thread safety** is ensured.
+Message thread should be worker thread if there is UI thread.
+You can post messages to the peer process from any threads. **Thread safety** is ensured.
 
 You can send raw/protobuf message with/without reply.
 
