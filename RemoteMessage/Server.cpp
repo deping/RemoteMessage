@@ -23,6 +23,8 @@ namespace RMsg
 
 Server::Server()
 	: m_acceptor(m_ioservice)
+    , m_port(0)
+    , m_listened(false)
 {
 }
 
@@ -33,11 +35,14 @@ Server::~Server()
 
 bool Server::Listen(int port, Session& s)
 {
+    m_port = port;
 	boost::asio::ip::tcp::endpoint endpoint(boost::asio::ip::tcp::v4(), port);
 	m_acceptor.open(endpoint.protocol());
 	boost::system::error_code ec;
 	CHECK_ERROR(m_acceptor.bind(endpoint, ec), false);
 	CHECK_ERROR(m_acceptor.listen(boost::asio::socket_base::max_connections, ec), false);
+    m_port = m_acceptor.local_endpoint().port();
+    m_listened = true;
 	m_acceptor.async_accept(s.m_socket, [&s, this](const boost::system::error_code &ec)
 	{
         if (!ec)
